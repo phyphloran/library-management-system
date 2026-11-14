@@ -20,7 +20,7 @@ export function adminPage(state) {
           )
           .join('')}</select></label>`
       : ''
-  }</div><div id="admin-results"></div></section><div class="info-strip">${icon('info')}<p>Учебный кабинет без авторизации. Все читательские заявки и изменения каталога доступны только в этом браузере.</p></div>`;
+  }</div><div id="admin-results"></div></section>`;
 }
 export function renderAdminResults(state) {
   const query = adminFilters.query.trim().toLocaleLowerCase('ru');
