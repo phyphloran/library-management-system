@@ -22,6 +22,27 @@ npm run preview       # Просмотр production-сборки
 
 Не открывайте `index.html` двойным щелчком: ES-модулям нужен HTTP-сервер.
 
+## GitHub Pages
+
+Сайт: **https://phyphloran.github.io/library-management-system/**.
+
+Публикация автоматическая: push в `main` запускает форматирование, тесты, сборку и деплой `dist/` через GitHub Actions. При ошибке проверки новая версия не публикуется. Pull request проходит проверки без публикации. Ручной запуск: Actions → Frontend checks and GitHub Pages → Run workflow.
+
+Источник публикации в Settings → Pages → Build and deployment должен быть **GitHub Actions**. Настройка включена для этого репозитория. Workflow использует официальный Pages artifact и окружение `github-pages`; отдельная ветка `gh-pages`, PAT или дополнительные секреты не нужны.
+
+В CI `VITE_BASE_PATH` задаётся как `/<имя репозитория>/`, поэтому JS, CSS, шрифты и favicon загружаются из правильной подпапки. При локальном запуске остаются относительные пути. Все экраны используют hash-маршруты, поэтому прямое открытие и обновление `.../library-management-system/#/admin` не требуют серверных redirects. Файл `.nojekyll` отключает обработку статических файлов Jekyll.
+
+Для проверки такой же сборки локально в PowerShell:
+
+```powershell
+$env:VITE_BASE_PATH = '/library-management-system/'
+npm run build
+Remove-Item Env:VITE_BASE_PATH
+npm run preview -- --base=/library-management-system/
+```
+
+Откройте `http://127.0.0.1:4173/library-management-system/`. При переходе с localhost на Pages сохранения не переносятся: у нового origin отдельный localStorage.
+
 ## Три экрана
 
 ### Каталог
