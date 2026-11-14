@@ -1,6 +1,7 @@
 import { initialBooks, genres } from '../data/books.js';
 import { additionalBooks } from '../data/additional-books.js';
-import { addDays, localDate } from '../shared/html.js';
+import { addDays } from '../shared/html.js';
+import { ValidationError, validateBookFields, validateReservationFields } from './validation.js';
 
 export const STORAGE_KEY = 'pereplet-library-v1';
 export const activeStatuses = ['pending', 'ready', 'issued'];
@@ -101,20 +102,11 @@ export function reserveBook(state, { bookId, name, email, pickup, consent }) {
       (item) => item.bookId === bookId && activeStatuses.includes(item.status),
     )
   )
-    throw new Error('У вас уже есть активная бронь этой книги.');
-  if (typeof name !== 'string' || name.trim().length < 2 || name.trim().length > 100)
-    throw new Error('Укажите имя от 2 до 100 символов.');
-  if (typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.length > 150)
-    throw new Error('Укажите корректную электронную почту.');
-  if (
-    !/^\d{4}-\d{2}-\d{2}$/.test(pickup) ||
-    Number.isNaN(Date.parse(`${pickup}T12:00:00`)) ||
-    localDate(new Date(`${pickup}T12:00:00`)) !== pickup ||
-    pickup < localDate() ||
-    pickup > addDays(7)
-  )
-    throw new Error('Выберите дату получения в ближайшие 7 дней.');
-  if (!consent) throw new Error('Подтвердите согласие на обработку данных для бронирования.');
+    throw new Error(
+      'У вас уже есть активная бронь этой книги. Откройте «Мои бронирования», чтобы посмотреть её статус или отменить бронь до выдачи.',
+    );
+  const errors = validateReservationFields({ name, email, pickup, consent });
+  if (Object.keys(errors).length) throw new ValidationError(errors);
   const reservation = {
     id: crypto.randomUUID(),
     bookId,
@@ -137,8 +129,11 @@ export function transitionReservation(state, id, next) {
     returned: [],
     cancelled: [],
   };
-  if (!item || !transitions[item.status]?.includes(next))
-    throw new Error('Этот переход статуса недоступен. Обновите страницу.');
+  if (!item) throw new Error('Бронь не найдена. Обновите список бронирований.');
+  if (!transitions[item.status]?.includes(next))
+    throw new Error(
+      `У брони уже статус «${statusLabels[item.status]}». Обновите список и выберите доступное действие.`,
+    );
   item.status = next;
 }
 export function saveBook(state, input, id) {
@@ -148,35 +143,14 @@ export function saveBook(state, input, id) {
   const year = Number(input.year);
   const pages = Number(input.pages);
   const isbn = String(input.isbn || '').trim();
-  if (!title || title.length > 160 || !author || author.length > 120)
-    throw new Error('Укажите название и автора допустимой длины.');
-  if (
-    !genres.includes(input.genre) ||
-    !Number.isInteger(copies) ||
-    copies < 0 ||
-    copies > 1000 ||
-    !Number.isInteger(year) ||
-    year < 1 ||
-    year > new Date().getFullYear() ||
-    !Number.isInteger(pages) ||
-    pages < 1 ||
-    pages > 10000 ||
-    !/^[\dXx -]{10,25}$/.test(isbn)
-  )
-    throw new Error('Проверьте жанр, год, страницы, ISBN и количество экземпляров.');
-  if (
-    state.books.some(
-      (book) => book.id !== id && book.isbn.replace(/[ -]/g, '') === isbn.replace(/[ -]/g, ''),
-    )
-  )
-    throw new Error('Книга с таким ISBN уже есть в каталоге.');
   const reserved = state.reservations.filter(
     (item) => item.bookId === id && activeStatuses.includes(item.status),
   ).length;
-  if (copies < reserved)
-    throw new Error(`Нельзя указать меньше ${reserved} экз.: они уже забронированы или выданы.`);
+  const errors = validateBookFields(input, { books: state.books, id, reserved });
+  if (Object.keys(errors).length) throw new ValidationError(errors);
   const previous = state.books.find((book) => book.id === id);
-  if (id && !previous) throw new Error('Книга не найдена.');
+  if (id && !previous)
+    throw new Error('Книга не найдена. Обновите каталог и откройте запись заново.');
   const book = {
     ...(previous || {
       id: crypto.randomUUID(),

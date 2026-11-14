@@ -1,4 +1,17 @@
 /* Readable UI density shared by every feature. */
+.field-hint {
+  display: block;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  margin-top: 6px;
+}
+.field :is(input, select, textarea)[aria-invalid='true'] {
+  border-color: var(--danger);
+}
+.checkbox-label:has(input[aria-invalid='true']) {
+  color: var(--danger);
+}
 .catalog-pagination {
   display: flex;
   flex-direction: column;

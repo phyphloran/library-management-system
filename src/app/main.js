@@ -23,7 +23,8 @@ import {
   STORAGE_KEY,
 } from '../services/library.js';
 import { openDialog, closeDialog, setupDialog, toast } from '../components/ui.js';
-import { escapeHtml as e, addDays, localDate, dateLabel } from '../shared/html.js';
+import { escapeHtml as e, addDays, dateLabel } from '../shared/html.js';
+import { clearFormErrors, showFormError } from '../components/form-errors.js';
 
 const library = createLibrary();
 const app = document.querySelector('#app');
@@ -230,29 +231,7 @@ document.addEventListener('submit', (event) => {
     event.preventDefault();
     const form = event.target;
     const values = Object.fromEntries(new FormData(form));
-    const errors = {
-      name:
-        !values.name || values.name.trim().length < 2 ? 'Укажите имя: не менее 2 символов.' : '',
-      email: !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(values.email)
-        ? 'Укажите почту в формате reader@example.com.'
-        : '',
-      pickup:
-        !values.pickup || values.pickup < localDate() || values.pickup > addDays(7)
-          ? 'Выберите дату в ближайшие 7 дней.'
-          : '',
-      consent: !values.consent ? 'Подтвердите согласие для оформления брони.' : '',
-    };
-    for (const [key, error] of Object.entries(errors)) {
-      document.querySelector(`#${key}-error`).textContent = error;
-      form.elements[key].setAttribute('aria-invalid', String(Boolean(error)));
-    }
-    const firstError = Object.keys(errors).find((key) => errors[key]);
-    const errorElement = document.querySelector('#reservation-error');
-    if (firstError) {
-      errorElement.textContent = 'Проверьте отмеченные поля.';
-      form.elements[firstError].focus();
-      return;
-    }
+    clearFormErrors(form);
     try {
       const item = library.commit((state) =>
         reserveBook(state, {
@@ -266,12 +245,13 @@ document.addEventListener('submit', (event) => {
       render({ focus: true });
       openDialog(successDialog(library.state, item));
     } catch (error) {
-      errorElement.textContent = error.message;
+      showFormError(form, error);
     }
   }
   if (event.target.id === 'book-form') {
     event.preventDefault();
     const form = event.target;
+    clearFormErrors(form);
     try {
       library.commit((state) =>
         saveBook(state, Object.fromEntries(new FormData(form)), form.dataset.id || undefined),
@@ -283,7 +263,7 @@ document.addEventListener('submit', (event) => {
       else render();
       toast(form.dataset.id ? 'Изменения сохранены' : 'Книга добавлена в каталог');
     } catch (error) {
-      document.querySelector('#book-form-error').textContent = error.message;
+      showFormError(form, error);
     }
   }
 });
