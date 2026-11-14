@@ -10,7 +10,10 @@ import {
   createLibrary,
   validateState,
   STORAGE_KEY,
+  migrateCatalog,
 } from '../src/services/library.js';
+import { initialBooks } from '../src/data/books.js';
+import { selectCatalogBooks } from '../src/features/catalog/catalog-model.js';
 import { localDate, addDays, escapeHtml } from '../src/shared/html.js';
 
 const booking = (bookId = 'prince') => ({
@@ -104,7 +107,7 @@ test('local persistence reloads correctly and storage errors roll back changes',
   values.set(STORAGE_KEY, '{broken');
   const recovered = createLibrary(storage);
   assert.ok(recovered.warning);
-  assert.equal(recovered.state.books.length, 8);
+  assert.equal(recovered.state.books.length, 30);
 });
 test('stored schema rejects duplicate ids, invalid statuses and orphan reservations', () => {
   const state = createInitialState();
@@ -148,7 +151,94 @@ test('blocked storage leaves the initial UI usable and rejects unsaved success',
   };
   const library = createLibrary(storage);
   assert.ok(library.warning);
-  assert.equal(library.state.books.length, 8);
+  assert.equal(library.state.books.length, 30);
   assert.throws(() => library.commit((state) => reserveBook(state, booking())), /сохранить/);
   assert.equal(library.state.reservations.length, 0);
+});
+test('expanded catalog contains 30 unique valid book records', () => {
+  const state = createInitialState();
+  assert.equal(state.books.length, 30);
+  assert.equal(new Set(state.books.map((book) => book.isbn)).size, 30);
+  assert.equal(validateState(state), true);
+});
+test('legacy saves gain new books without replacing edits, reservations or favorites', () => {
+  const legacy = createInitialState();
+  delete legacy.catalogRevision;
+  legacy.books = legacy.books.slice(0, 8).filter((book) => book.id !== 'ocean');
+  legacy.books[0].title = 'Редакция библиотекаря';
+  legacy.books[0].copies = 7;
+  legacy.favorites.push('prince');
+  reserveBook(legacy, booking());
+  legacy.books.push({
+    ...newBook(),
+    ...initialBooks[6],
+    id: 'custom',
+    title: 'Книга библиотекаря',
+    isbn: '978-5-123456-78-9',
+  });
+  const values = new Map([[STORAGE_KEY, JSON.stringify(legacy)]]);
+  const storage = {
+    getItem: (key) => values.get(key),
+    setItem: (key, value) => values.set(key, value),
+  };
+  const library = createLibrary(storage);
+  assert.equal(library.state.books.length, 30);
+  assert.equal(library.state.books[0].title, 'Редакция библиотекаря');
+  assert.equal(library.state.books[0].copies, 7);
+  assert.equal(
+    library.state.books.some((book) => book.id === 'ocean'),
+    false,
+  );
+  assert.equal(
+    library.state.books.some((book) => book.id === 'custom'),
+    true,
+  );
+  assert.deepEqual(library.state.favorites, ['prince']);
+  assert.equal(library.state.reservations.length, 1);
+  library.commit((state) => deleteBook(state, 'collection-1'));
+  const reloaded = createLibrary(storage);
+  assert.equal(reloaded.state.books.length, 29);
+  assert.equal(
+    reloaded.state.books.some((book) => book.id === 'collection-1'),
+    false,
+  );
+  reloaded.reload();
+  assert.equal(reloaded.state.books.length, 29);
+});
+test('catalog migration does not duplicate an edition with the same ISBN', () => {
+  const state = createInitialState();
+  state.books = state.books.slice(0, 8);
+  delete state.catalogRevision;
+  state.books.push({ ...initialBooks[8], id: 'existing-edition' });
+  migrateCatalog(state);
+  assert.equal(state.books.length, 30);
+  assert.equal(
+    state.books.some((book) => book.id === 'collection-1'),
+    false,
+  );
+  migrateCatalog(state);
+  assert.equal(state.books.length, 30);
+});
+test('search and sorting operate on the whole catalog before pagination', () => {
+  const state = createInitialState();
+  const filters = { query: '', genre: 'all', available: false, favorites: false, sort: 'popular' };
+  assert.equal(selectCatalogBooks(state, filters).length, 30);
+  assert.equal(
+    selectCatalogBooks(state, { ...filters, query: 'Альберс' })[0].title,
+    'Взаимодействие цвета',
+  );
+  assert.equal(
+    selectCatalogBooks(state, { ...filters, query: initialBooks[29].isbn })[0].id,
+    'collection-22',
+  );
+  const fiction = selectCatalogBooks(state, { ...filters, genre: 'Художественная' });
+  assert.ok(fiction.length > 10);
+  state.favorites.push('collection-22');
+  assert.equal(selectCatalogBooks(state, { ...filters, favorites: true })[0].id, 'collection-22');
+  const sorted = selectCatalogBooks(state, { ...filters, sort: 'title' });
+  assert.deepEqual(
+    sorted.map((book) => book.title),
+    [...sorted].sort((a, b) => a.title.localeCompare(b.title, 'ru')).map((book) => book.title),
+  );
+  assert.equal(state.books[0].id, 'prince');
 });

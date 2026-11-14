@@ -155,6 +155,7 @@ document.addEventListener('click', (event) => {
     renderBooks(library.state);
   }
   if (target.hasAttribute('data-reset-filters')) resetFilters();
+  if (target.hasAttribute('data-load-more')) renderBooks(library.state, { append: true });
   if (target.dataset.reservationFilter) {
     reservationFilter = target.dataset.reservationFilter;
     render();

@@ -1,3 +1,5 @@
+import { additionalBooks } from './additional-books.js';
+
 export const initialBooks = [
   {
     id: 'prince',
@@ -127,6 +129,7 @@ export const initialBooks = [
     description:
       'Возвращение в места детства пробуждает воспоминания о невероятной дружбе. Тонкая история о памяти, страхе и чуде, скрытом в повседневности.',
   },
+  ...additionalBooks,
 ];
 
 export const genres = ['Художественная', 'Нон-фикшн', 'Наука', 'Искусство'];

@@ -1,4 +1,5 @@
 import { initialBooks, genres } from '../data/books.js';
+import { additionalBooks } from '../data/additional-books.js';
 import { addDays, localDate } from '../shared/html.js';
 
 export const STORAGE_KEY = 'pereplet-library-v1';
@@ -11,7 +12,27 @@ export const statusLabels = {
   cancelled: 'Отменена',
 };
 export function createInitialState() {
-  return { version: 1, books: structuredClone(initialBooks), reservations: [], favorites: [] };
+  return {
+    version: 1,
+    catalogRevision: 2,
+    books: structuredClone(initialBooks),
+    reservations: [],
+    favorites: [],
+  };
+}
+export function migrateCatalog(state) {
+  if ((state.catalogRevision || 1) >= 2) return state;
+  const ids = new Set(state.books.map((book) => book.id));
+  const isbns = new Set(state.books.map((book) => book.isbn.replace(/[ -]/g, '')));
+  state.books.push(
+    ...structuredClone(
+      additionalBooks.filter(
+        (book) => !ids.has(book.id) && !isbns.has(book.isbn.replace(/[ -]/g, '')),
+      ),
+    ),
+  );
+  state.catalogRevision = 2;
+  return state;
 }
 export function availableCopies(state, bookId) {
   const book = state.books.find((item) => item.id === bookId);
@@ -197,7 +218,7 @@ export function createLibrary(storage) {
     if (raw) {
       const parsed = JSON.parse(raw);
       if (!validateState(parsed)) throw new Error('invalid data');
-      state = parsed;
+      state = migrateCatalog(parsed);
     }
   } catch {
     warning = 'Не удалось прочитать сохранённые данные. Открыт начальный каталог.';
@@ -214,7 +235,7 @@ export function createLibrary(storage) {
       try {
         const raw = storage.getItem(STORAGE_KEY);
         const latest = raw ? JSON.parse(raw) : null;
-        if (latest && validateState(latest)) state = latest;
+        if (latest && validateState(latest)) state = migrateCatalog(latest);
       } catch {
         /* Persistence below provides an actionable error if storage is blocked. */
       }
@@ -235,7 +256,7 @@ export function createLibrary(storage) {
       try {
         const raw = storage.getItem(STORAGE_KEY);
         const parsed = raw ? JSON.parse(raw) : createInitialState();
-        if (validateState(parsed)) state = parsed;
+        if (validateState(parsed)) state = migrateCatalog(parsed);
       } catch {
         /* Keep the last valid state if another tab writes invalid data. */
       }

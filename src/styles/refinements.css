@@ -1,4 +1,70 @@
 /* Readable UI density shared by every feature. */
+.catalog-pagination {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 38px 0 8px;
+  margin-top: 32px;
+  border-top: 1px solid var(--line);
+  overflow-anchor: none;
+}
+.catalog-progress {
+  width: 210px;
+  text-align: center;
+}
+.catalog-progress p {
+  color: var(--muted);
+  font-size: 12px;
+}
+.catalog-progress strong {
+  color: var(--ink);
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.catalog-progress progress {
+  display: block;
+  appearance: none;
+  width: 100%;
+  height: 3px;
+  border: 0;
+  border-radius: 3px;
+  margin-top: 12px;
+  overflow: hidden;
+  background: var(--line);
+  color: #708761;
+}
+.catalog-progress progress::-webkit-progress-bar {
+  background: var(--line);
+}
+.catalog-progress progress::-webkit-progress-value {
+  background: #708761;
+  border-radius: 3px;
+}
+.catalog-progress progress::-moz-progress-bar {
+  background: #708761;
+}
+.load-more {
+  min-width: 235px;
+}
+.load-more-count {
+  padding-left: 12px;
+  border-left: 1px solid #cdd3c7;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+.catalog-end {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--muted);
+  min-height: 45px;
+}
+.catalog-end .icon {
+  width: 16px;
+  height: 16px;
+}
 .nav-link {
   font-size: 13px;
 }

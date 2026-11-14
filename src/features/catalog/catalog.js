@@ -4,6 +4,10 @@ import { icon } from '../../shared/icons.js';
 import { cover } from '../../components/book-cover.js';
 import { availability, emptyState, openDialog } from '../../components/ui.js';
 import { availableCopies } from '../../services/library.js';
+import { PAGE_SIZE, selectCatalogBooks } from './catalog-model.js';
+
+let visibleCount = PAGE_SIZE;
+let previousFilterKey = '';
 
 export const catalogFilters = {
   query: '',
@@ -18,33 +22,71 @@ export function catalogPage(state) {
     .filter(Boolean);
   return `<div class="page-heading"><h1>Ваша следующая история.</h1><p>Книги, к которым хочется возвращаться. Найдите свою в каталоге.</p></div><section class="catalog-banner" aria-label="Книжная подборка"><div class="banner-copy"><h2>Между делом —<br>целый мир.</h2><p>Отложите суету. Откройте хорошую книгу.</p><a class="button primary" href="#book-list" data-browse>Выбрать книгу ${icon('arrow')}</a></div><div class="banner-books" aria-hidden="true">${featured.map((book) => cover(book)).join('')}</div></section><section class="catalog-section" aria-label="Каталог книг"><div class="catalog-toolbar"><div class="search-field"><label for="book-search" class="visually-hidden">Название, автор или ISBN</label>${icon('search')}<input id="book-search" type="search" placeholder="Название, автор или ISBN" value="${e(catalogFilters.query)}" autocomplete="off" /></div><label class="sort-field"><span class="visually-hidden">Сортировка книг</span><select id="book-sort"><option value="popular" ${catalogFilters.sort === 'popular' ? 'selected' : ''}>Сначала популярные</option><option value="title" ${catalogFilters.sort === 'title' ? 'selected' : ''}>По названию</option><option value="newest" ${catalogFilters.sort === 'newest' ? 'selected' : ''}>По году издания</option></select></label></div><div class="filter-toolbar"><div class="genre-filters" aria-label="Жанры книг">${[['all', 'Все книги'], ...genres.map((genre) => [genre, genre])].map(([value, label]) => `<button class="filter-chip ${catalogFilters.genre === value ? 'selected' : ''}" data-genre="${e(value)}" aria-pressed="${catalogFilters.genre === value}">${label}</button>`).join('')}</div><label class="switch-label"><input type="checkbox" id="available-filter" ${catalogFilters.available ? 'checked' : ''}/><span class="switch"></span>В наличии</label></div><div class="results-heading" id="book-list"><span id="result-count" role="status"></span><button class="text-button favorites-filter ${catalogFilters.favorites ? 'selected' : ''}" data-favorites aria-pressed="${catalogFilters.favorites}">${icon('bookmark')}Избранное</button></div><div id="catalog-results"></div></section>`;
 }
-export function renderBooks(state) {
-  const query = catalogFilters.query.trim().toLocaleLowerCase('ru');
-  const books = state.books
-    .filter(
-      (book) =>
-        (!query ||
-          `${book.title} ${book.author} ${book.isbn}`.toLocaleLowerCase('ru').includes(query)) &&
-        (catalogFilters.genre === 'all' || book.genre === catalogFilters.genre) &&
-        (!catalogFilters.available || availableCopies(state, book.id) > 0) &&
-        (!catalogFilters.favorites || state.favorites.includes(book.id)),
-    )
-    .sort((a, b) =>
-      catalogFilters.sort === 'title'
-        ? a.title.localeCompare(b.title, 'ru')
-        : catalogFilters.sort === 'newest'
-          ? b.year - a.year
-          : b.popularity - a.popularity,
-    );
+export function renderBooks(state, { append = false } = {}) {
+  const filterKey = JSON.stringify(catalogFilters);
+  if (filterKey !== previousFilterKey) {
+    visibleCount = PAGE_SIZE;
+    previousFilterKey = filterKey;
+    append = false;
+  }
+  const books = selectCatalogBooks(state, catalogFilters);
+  if (append) visibleCount += PAGE_SIZE;
+  const shown = books.slice(0, visibleCount);
   document.querySelector('#result-count').textContent =
     `Найдено: ${books.length} из ${state.books.length}`;
-  document.querySelector('#catalog-results').innerHTML = books.length
-    ? `<div class="book-grid">${books.map((book) => `<article class="book-card"><button class="book-visual" data-details="${e(book.id)}" aria-label="Открыть книгу «${e(book.title)}»">${cover(book)}<span class="view-book">Посмотреть ${icon('arrow')}</span></button><div class="book-meta"><span class="book-genre">${e(book.genre)}</span><button class="icon-button favorite-button ${state.favorites.includes(book.id) ? 'saved' : ''}" data-favorite="${e(book.id)}" aria-pressed="${state.favorites.includes(book.id)}" aria-label="${state.favorites.includes(book.id) ? 'Убрать из избранного' : 'Добавить в избранное'}: ${e(book.title)}">${icon('bookmark')}</button></div><h2><button data-details="${e(book.id)}">${e(book.title)}</button></h2><p class="book-author">${e(book.author)}</p>${availability(state, book)}</article>`).join('')}</div>`
-    : emptyState(
-        'Книг пока не нашлось',
-        'Попробуйте другое название или сбросьте фильтры.',
-        '<button class="button secondary" data-reset-filters>Сбросить фильтры</button>',
-      );
+  const results = document.querySelector('#catalog-results');
+  if (!books.length) {
+    results.innerHTML = emptyState(
+      'Книг пока не нашлось',
+      'Попробуйте другое название или сбросьте фильтры.',
+      '<button class="button secondary" data-reset-filters>Сбросить фильтры</button>',
+    );
+    return;
+  }
+  let firstAdded;
+  if (append && results.querySelector('.book-grid')) {
+    const grid = results.querySelector('.book-grid');
+    const before = grid.children.length;
+    grid.insertAdjacentHTML(
+      'beforeend',
+      shown
+        .slice(before)
+        .map((book) => bookCard(state, book))
+        .join(''),
+    );
+    firstAdded = grid.children[before];
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      [...grid.children].slice(before).forEach((card, index) => {
+        card.animate(
+          [
+            { opacity: 0.4, transform: 'translateY(8px)' },
+            { opacity: 1, transform: 'translateY(0)' },
+          ],
+          { duration: 240, delay: Math.min(index * 20, 120), easing: 'cubic-bezier(.16,1,.3,1)' },
+        );
+      });
+    }
+  } else {
+    results.innerHTML = `<div class="book-grid">${shown.map((book) => bookCard(state, book)).join('')}</div><div class="catalog-pagination" id="catalog-pagination"></div>`;
+  }
+  const pagination = document.querySelector('#catalog-pagination');
+  if (!pagination.querySelector('.catalog-progress')) {
+    pagination.innerHTML =
+      '<div class="catalog-progress"><p role="status" aria-live="polite" aria-atomic="true"></p><progress aria-label="Показано книг"></progress></div><div class="catalog-pagination-action"></div>';
+  }
+  pagination.querySelector('[role="status"]').innerHTML =
+    `Показано <strong>${shown.length}</strong> из <strong>${books.length}</strong> книг`;
+  const progress = pagination.querySelector('progress');
+  progress.max = books.length;
+  progress.value = shown.length;
+  pagination.querySelector('.catalog-pagination-action').innerHTML =
+    shown.length < books.length
+      ? `<button class="button secondary load-more" data-load-more aria-controls="catalog-results">Показать ещё ${icon('plus')}<span class="load-more-count">${Math.min(PAGE_SIZE, books.length - shown.length)}</span></button>`
+      : `<p class="catalog-end">${icon('check')}Все книги показаны</p>`;
+  firstAdded?.querySelector('button')?.focus({ preventScroll: true });
+}
+function bookCard(state, book) {
+  return `<article class="book-card" data-book-id="${e(book.id)}"><button class="book-visual" data-details="${e(book.id)}" aria-label="Открыть книгу «${e(book.title)}»">${cover(book)}<span class="view-book">Посмотреть ${icon('arrow')}</span></button><div class="book-meta"><span class="book-genre">${e(book.genre)}</span><button class="icon-button favorite-button ${state.favorites.includes(book.id) ? 'saved' : ''}" data-favorite="${e(book.id)}" aria-pressed="${state.favorites.includes(book.id)}" aria-label="${state.favorites.includes(book.id) ? 'Убрать из избранного' : 'Добавить в избранное'}: ${e(book.title)}">${icon('bookmark')}</button></div><h2><button data-details="${e(book.id)}">${e(book.title)}</button></h2><p class="book-author">${e(book.author)}</p>${availability(state, book)}</article>`;
 }
 export function showBookDetails(state, id) {
   const book = state.books.find((item) => item.id === id);
