@@ -1,0 +1,46 @@
+@font-face {
+  font-family: Onest;
+  src: url('/fonts/onest-cyrillic.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: Onest;
+  src: url('/fonts/onest-latin.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+  unicode-range: U+0000-00FF;
+}
+@font-face {
+  font-family: Lora;
+  src: url('/fonts/lora-cyrillic.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+}
+@font-face {
+  font-family: Lora;
+  src: url('/fonts/lora-latin.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+  unicode-range: U+0000-00FF;
+}
+.book-cover text {
+  fill: currentColor;
+}
+:root {
+  --bg: #f7f7f2;
+  --surface: #fff;
+  --ink: #203e35;
+  --text: #293d35;
+  --muted: #69736a;
+  --line: #dedfd5;
+  --sage: #e4eadb;
+  --accent: #dfe9b7;
+  --danger: #a33c36;
+  --radius: 12px;
+  --sidebar: 238px;
+  --display: Lora, Georgia, serif;
+  --body: Onest, Arial, sans-serif;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  color-scheme: light;
+}

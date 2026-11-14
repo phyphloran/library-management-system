@@ -1,0 +1,154 @@
+@keyframes shelf-arrival {
+  from {
+    opacity: 0.3;
+    transform: translateY(16px);
+    clip-path: inset(0 0 15% 0);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+    clip-path: inset(0);
+  }
+}
+@keyframes page-arrival {
+  from {
+    opacity: 0.5;
+    transform: translateY(7px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes dialog-arrival {
+  from {
+    opacity: 0.2;
+    transform: translateY(16px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+@keyframes check-draw {
+  from {
+    stroke-dashoffset: 26;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+.banner-books .book-cover {
+  animation: shelf-arrival 0.65s var(--ease) both;
+}
+.banner-books .book-cover:nth-child(2) {
+  animation-delay: 0.08s;
+}
+.banner-books .book-cover:nth-child(3) {
+  animation-delay: 0.16s;
+}
+.page-heading {
+  animation: page-arrival 0.35s var(--ease);
+}
+dialog[open] {
+  animation: dialog-arrival 0.3s var(--ease);
+}
+.success-symbol .icon {
+  stroke-dasharray: 26;
+  animation: check-draw 0.6s var(--ease) 0.12s both;
+}
+.button,
+.icon-button,
+.nav-link,
+.filter-chip,
+.text-button {
+  transition:
+    background-color 0.18s,
+    color 0.18s,
+    transform 0.2s var(--ease);
+}
+.button:not(:disabled):hover {
+  transform: translateY(-2px);
+}
+.button:not(:disabled):active {
+  transform: translateY(1px);
+}
+.primary:not(:disabled):hover {
+  background: #315347;
+}
+.secondary:not(:disabled):hover,
+.icon-button:hover {
+  background: #e8eddf;
+}
+.nav-link:not(.active):hover {
+  background: #f0f3e9;
+}
+.filter-chip:not(.selected):hover {
+  background: #e8eddf;
+}
+.book-cover {
+  transition:
+    transform 0.4s var(--ease),
+    box-shadow 0.4s var(--ease);
+}
+.book-visual:hover .book-cover,
+.book-visual:focus-visible .book-cover {
+  transform: translateY(-5px) scale(1.025);
+  box-shadow: 5px 12px 16px #293c3333;
+}
+.view-book {
+  transition:
+    transform 0.3s var(--ease),
+    opacity 0.2s;
+}
+.book-visual:hover .view-book,
+.book-visual:focus-visible .view-book {
+  opacity: 1;
+  transform: translateY(0);
+}
+.favorite-button:active {
+  transform: scale(0.9);
+}
+.toast {
+  transition:
+    opacity 0.2s,
+    transform 0.3s var(--ease);
+}
+.switch,
+.switch:after {
+  transition:
+    background-color 0.2s,
+    transform 0.2s var(--ease);
+}
+.sidebar {
+  transition: transform 0.3s var(--ease);
+}
+.back-link:hover {
+  color: var(--ink);
+}
+.book-card h2 button:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .button:not(:disabled):hover,
+  .book-visual:hover .book-cover,
+  .book-visual:focus-visible .book-cover {
+    transform: none;
+  }
+  .toast,
+  .toast.visible {
+    transform: translateX(-50%);
+  }
+  .view-book {
+    transform: none;
+  }
+}

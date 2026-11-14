@@ -1,0 +1,206 @@
+/* Readable UI density shared by every feature. */
+.nav-link {
+  font-size: 13px;
+}
+.breadcrumb {
+  font-size: 13px;
+}
+.button {
+  font-size: 13px;
+}
+.filter-chip {
+  font-size: 12px;
+}
+.search-field input,
+select {
+  font-size: 13px;
+}
+.book-card h2 {
+  font-size: 16px;
+}
+.book-author {
+  font-size: 12px;
+}
+.book-genre {
+  font-size: 11px;
+}
+.availability {
+  font-size: 11px;
+}
+.banner-copy p {
+  font-size: 13px;
+}
+.results-heading,
+.text-button,
+.switch-label {
+  font-size: 12px;
+}
+.page-heading > p,
+.page-heading > div > p {
+  font-size: 14px;
+}
+.brand small {
+  font-size: 11px;
+}
+.book-visual .book-cover {
+  width: min(158px, 78%);
+}
+@media (max-width: 1200px) {
+  .nav-link {
+    font-size: 12px;
+  }
+  .filter-chip {
+    font-size: 11px;
+  }
+  .book-card h2 {
+    font-size: 14px;
+  }
+  .book-author {
+    font-size: 11px;
+  }
+  .book-visual .book-cover {
+    width: min(142px, 85%);
+  }
+}
+@media (max-width: 760px) {
+  .breadcrumb {
+    font-size: 11px;
+  }
+  .page-heading > p,
+  .page-heading > div > p {
+    font-size: 13px;
+  }
+  .book-card h2 {
+    font-size: 15px;
+  }
+  .book-author {
+    font-size: 12px;
+  }
+  .nav-link {
+    font-size: 14px;
+  }
+  .nav-label {
+    font-size: 12px;
+  }
+}
+@media (max-width: 580px) {
+  .banner-copy p {
+    font-size: 11px;
+  }
+  .filter-chip {
+    font-size: 11px;
+  }
+  .book-card h2 {
+    font-size: 14px;
+  }
+  .book-author {
+    font-size: 11px;
+  }
+  .availability {
+    font-size: 10px;
+  }
+  .book-genre {
+    font-size: 10px;
+  }
+  .book-visual .book-cover {
+    width: min(128px, 94%);
+  }
+  .search-field input {
+    font-size: 16px;
+  }
+  .search-field input::placeholder {
+    font-size: 12px;
+  }
+  .results-heading,
+  .text-button,
+  .switch-label {
+    font-size: 11px;
+  }
+  .banner-copy .button {
+    font-size: 11px;
+  }
+  .fine-print {
+    font-size: 11px;
+  }
+  .checkbox-label {
+    font-size: 12px;
+  }
+  .field-error,
+  .form-status {
+    font-size: 12px;
+  }
+  .booking-form-panel > .muted {
+    font-size: 13px;
+  }
+  .pickup-info {
+    font-size: 12px;
+  }
+  .pickup-info p {
+    font-size: 11px;
+  }
+  .status-badge {
+    font-size: 11px;
+  }
+  .reservation-description > .book-author {
+    font-size: 11px;
+  }
+  .reservation-dates {
+    font-size: 10px;
+  }
+  .reservation-actions .button {
+    font-size: 11px;
+  }
+  td strong {
+    font-size: 13px;
+  }
+  td small {
+    font-size: 11px;
+  }
+  .table-actions .small-button {
+    font-size: 12px;
+  }
+  .footer {
+    font-size: 10px;
+  }
+  .demo-note {
+    font-size: 12px;
+  }
+  .demo-note small {
+    font-size: 11px;
+  }
+}
+@media (max-width: 350px) {
+  .book-visual .book-cover {
+    width: 99px;
+  }
+  .book-card h2 {
+    font-size: 13px;
+  }
+  .availability {
+    font-size: 9px;
+  }
+  .banner-copy p {
+    font-size: 10px;
+  }
+  .banner-copy .button {
+    font-size: 10px;
+    padding-inline: 10px;
+  }
+}
+@media (max-width: 580px) {
+  .book-card h2 > button {
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+  }
+  .book-meta {
+    margin-bottom: 3px;
+  }
+  .favorite-button {
+    width: 44px;
+    height: 44px;
+  }
+  .favorite-button:after {
+    inset: 0;
+  }
+}
